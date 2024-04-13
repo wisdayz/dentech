@@ -1,0 +1,157 @@
+import 'package:flutter/material.dart';
+import 'package:dentech/dto/book.dart';
+import 'package:dentech/services/dbhelper.dart';
+import 'package:dentech/utils/constants.dart';
+
+class ReservasiEditScreen extends StatefulWidget {
+  final Book? reservasi;
+
+  ReservasiEditScreen({this.reservasi});
+
+  @override
+  _ReservasiEditScreenState createState() => _ReservasiEditScreenState();
+}
+
+class _ReservasiEditScreenState extends State<ReservasiEditScreen> {
+  final TextEditingController _namaController = TextEditingController();
+  final TextEditingController _alamatController = TextEditingController();
+  final TextEditingController _tanggalController = TextEditingController();
+  final TextEditingController _jamController = TextEditingController();
+
+  @override
+  void initState() {
+    super.initState();
+    if (widget.reservasi != null) {
+      _populateFields(widget.reservasi!);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: Text(widget.reservasi != null ? 'Perbarui Reservasi' : 'Tambah Reservasi'),
+
+        backgroundColor: bgColor,
+      ),
+      backgroundColor: bgColor,
+      body: Padding(
+        padding: EdgeInsets.all(16.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            TextField(
+              controller: _namaController,
+              decoration: InputDecoration(
+                labelText: 'Nama',
+                labelStyle: textNormal,
+                fillColor: Colors.white,
+                filled: true,
+              ),
+              style: textNormal,
+            ),
+            SizedBox(height: 16),
+            TextField(
+              controller: _alamatController,
+              decoration: InputDecoration(
+                labelText: 'Alamat',
+                labelStyle: textNormal,
+                fillColor: Colors.white,
+                filled: true,
+              ),
+              style: textNormal,
+            ),
+            SizedBox(height: 16),
+            TextField(
+              controller: _tanggalController,
+              decoration: InputDecoration(
+                labelText: 'Tanggal',
+                labelStyle: textNormal,
+                fillColor: Colors.white,
+                filled: true,
+              ),
+              style: textNormal,
+            ),
+            SizedBox(height: 16),
+            TextField(
+              controller: _jamController,
+              decoration: InputDecoration(
+                labelText: 'Jam',
+                labelStyle: textNormal,
+                fillColor: Colors.white,
+                filled: true,
+              ),
+              style: textNormal,
+            ),
+            SizedBox(height: 16.0),
+            ElevatedButton(
+              onPressed: () {
+                widget.reservasi != null ? _updateReservasi() : _tambahReservasi();
+              },
+              child: Text(widget.reservasi != null ? 'Perbarui Reservasi' : 'Tambah Reservasi'),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.white,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(30),
+                  side: BorderSide(color: buttonColor),
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  void _populateFields(Book reservasi) {
+    _namaController.text = reservasi.nama;
+    _alamatController.text = reservasi.alamat;
+    _tanggalController.text = reservasi.tanggal;
+    _jamController.text = reservasi.jam;
+  }
+
+  Future<void> _tambahReservasi() async {
+    final String nama = _namaController.text;
+    final String alamat = _alamatController.text;
+    final String tanggal = _tanggalController.text;
+    final String jam = _jamController.text;
+
+    if (nama.isEmpty || alamat.isEmpty || tanggal.isEmpty || jam.isEmpty) {
+      return;
+    }
+
+    final Book reservasi = Book(nama: nama, alamat: alamat, tanggal: tanggal, jam: jam);
+    final db = await DbHelper.instance.database;
+    await db.insert('reservasi', reservasi.toMap());
+
+    Navigator.pop(context, true);
+  }
+
+  Future<void> _updateReservasi() async {
+    final String nama = _namaController.text;
+    final String alamat = _alamatController.text;
+    final String tanggal = _tanggalController.text;
+    final String jam = _jamController.text;
+
+    if (nama.isEmpty || alamat.isEmpty || tanggal.isEmpty || jam.isEmpty) {
+      return;
+    }
+
+    final Book updatedReservasi = Book(
+      id: widget.reservasi!.id,
+      nama: nama,
+      alamat: alamat,
+      tanggal: tanggal,
+      jam: jam,
+    );
+    final db = await DbHelper.instance.database;
+    await db.update(
+      'reservasi',
+      updatedReservasi.toMap(),
+      where: 'id = ?',
+      whereArgs: [updatedReservasi.id],
+    );
+
+    Navigator.pop(context, true);
+  }
+}
